@@ -11,7 +11,6 @@ from torch.utils.data import Dataset, DataLoader
 
 from source.classes.herbarium import Herbarium
 
-
 def main():
     
     train_dir = '/Volumes/CF_Lacie_P2/train/'
