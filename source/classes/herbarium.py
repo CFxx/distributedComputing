@@ -4,7 +4,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import torch.nn as nn
 
-from functions import load_coco_data
+from ..functions import load_coco_data
 from .sampleGetter import SampleGetter
 
 class Herbarium:
@@ -31,7 +31,7 @@ class Herbarium:
                                         transforms.Resize((image_size, image_size)), 
                                         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
 
-        train_coco_data = load_coco_data(self.train_dir, self.meta_filename)
+        train_coco_data = load_coco_data(self.train_dir, self.meta_filename, 'id', ['image_id'])
         self.nb_classes = len(train_coco_data['category_id'].value_counts())
         train_coco_data = train_coco_data[0:train_limit]
         X_Train, Y_Train = train_coco_data['file_name'].values, train_coco_data['category_id'].values
