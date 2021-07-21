@@ -24,7 +24,6 @@ class Herbarium:
     def load(self):
 
         train_limit = 1000
-        test_limit = 100
         image_size = 32
         nb_batch = 16
         transform = transforms.Compose( [transforms.ToTensor(), 
@@ -37,11 +36,8 @@ class Herbarium:
         X_Train, Y_Train = train_coco_data['file_name'].values, train_coco_data['category_id'].values
         self.train_data_getter = DataLoader(SampleGetter(self.train_dir, X_Train, Y_Train, transform), batch_size=nb_batch, shuffle=True)
     
-        #test_coco_data = load_coco_data(self.test_dir, self.meta_filename, test_limit)
-        #X_Test, Y_Test= test_coco_data['file_name'].values, test_coco_data['file_name'].values
-        #self.test_data_getter = DataLoader(SampleGetter(self.test_dir, X_Test, Y_Test, transform), batch_size=nb_batch, shuffle=True)
-    
     def train(self):
+        
         model = torchvision.models.resnet34()
         model.fc = nn.Linear(512, self.nb_classes, bias=True)
         model = model.to(self.device)
