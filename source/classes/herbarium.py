@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 
 from ..functions import load_coco_data
+from ..functions import create_data_loader
 from .sampleGetter import SampleGetter
 
 class Herbarium:
@@ -14,56 +15,53 @@ class Herbarium:
         self.train_dir = train_dir
         self.test_dir = test_dir
         self.meta_filename = meta_filename
+
         self.train_data_getter = None
         self.test_data_getter = None
         self.nb_classes = 0
         self.epochs = 2
+        self.lr = 0.01
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    
-    def load(self):
+        self.model = torchvision.models.resnet34()
+        self.model.fc = nn.Linear(512, self.nb_classes, bias=True)
+        self.model = self.model.to(self.device)
 
-        train_limit = 1000
-        image_size = 32
-        nb_batch = 16
-        transform = transforms.Compose( [transforms.ToTensor(), 
-                                        transforms.Resize((image_size, image_size)), 
+        self.batch = 16
+        self.image_size = 32
+        self.transform = transforms.Compose( [transforms.ToTensor(), 
+                                        transforms.Resize((self.image_size, self.image_size)), 
                                         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
 
-        train_coco_data = load_coco_data(self.train_dir, self.meta_filename, 'id', ['image_id'])
-        self.nb_classes = len(train_coco_data['category_id'].value_counts())
-        train_coco_data = train_coco_data[0:train_limit]
-        X_Train, Y_Train = train_coco_data['file_name'].values, train_coco_data['category_id'].values
-        self.train_data_getter = DataLoader(SampleGetter(self.train_dir, X_Train, Y_Train, transform), batch_size=nb_batch, shuffle=True)
-    
-    def train(self):
-        
-        model = torchvision.models.resnet34()
-        model.fc = nn.Linear(512, self.nb_classes, bias=True)
-        model = model.to(self.device)
-
         # loss and optimizer
-        criterion = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+        self.criterion = nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
+    
+    def load_train_data(self, limit=1000):
+
+        coco_data = load_coco_data(self.train_dir, self.meta_filename)
+        self.train_data_getter = create_data_loader(self.train_dir, coco_data, 'file_name', 'category_id', self.transform, self.batch, limit)
+
+    def train(self):
 
         # forward pass
         for epoch in range(self.epochs):
             progress_loss = 0.0
             
             # model training mode
-            model = model.train()
+            self.model = self.model.train()
 
             for i, (images, labels) in enumerate(self.train_data_getter):
                 images = images.to(self.device)
                 labels = labels.to(self.device)
-                output = model(images)
-                #print("output : ", output)
-                loss = criterion(output, labels)
-                optimizer.zero_grad()
+                output = self.model(images)
+
+                loss = self.criterion(output, labels)
+                self.optimizer.zero_grad()
                 loss.backward()
-                optimizer.step()
+                self.optimizer.step()
                 
                 progress_loss += loss.detach().item()
 
-            model.eval()
+            self.model.eval()
             print(f'Epoch : {epoch} | Loss : {(progress_loss/i):.4}')
