@@ -14,7 +14,7 @@ def load_coco_data(dir, meta_filename, x_key='images', y_key='annotations', clas
         annotations.drop(columns=col)
     train = images.merge(annotations, on=merge_on)
     nb_classes = len(train[class_id].value_counts())
-
+    
     return train, nb_classes
 
 

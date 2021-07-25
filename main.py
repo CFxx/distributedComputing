@@ -9,21 +9,27 @@ from source.classes.herbarium import Herbarium
 from source.functions import load_coco_data
 from source.functions import create_data_loader
 
+import time
+
 def main():
     
     train_dir = '/Volumes/CF_Lacie_P2/train/'
     test_dir = '/Volumes/CF_Lacie_P2/test/'
     meta_filename = 'metadata.json'
     herb = Herbarium(train_dir, test_dir, meta_filename)
-    #herb.load_train_data()
+    herb.load_train_data(4096)
+    start = time.time()
+    herb.train()
+    end = time.time()
+    print(f'training time {end-start}s')
     #herb.test()
     #herb.step_train()
 
-    coco_data, nb_classes = load_coco_data(train_dir, meta_filename)[0:98]
+    #coco_data, nb_classes = load_coco_data(train_dir, meta_filename)[0:98]
 
-    herb.train_data_getter, _= create_data_loader(train_dir, coco_data, 'file_name', 'category_id', herb.transform, herb.batch)
-    herb.nb_classes = nb_classes
-    herb.init_model()
+    #herb.train_data_getter, _= create_data_loader(train_dir, coco_data, 'file_name', 'category_id', herb.transform, herb.batch)
+    #herb.nb_classes = nb_classes
+    #herb.init_model()
 
 if __name__ == "__main__":
     main()

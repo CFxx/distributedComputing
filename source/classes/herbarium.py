@@ -34,8 +34,10 @@ class Herbarium:
     
     def load_train_data(self, limit=1024):
 
-        coco_data = load_coco_data(self.train_dir, self.meta_filename)
-        self.train_data_getter, self.nb_classes= create_data_loader(self.train_dir, coco_data, 'file_name', 'category_id', self.transform, self.batch, limit)
+        coco_data, self.nb_classes = load_coco_data(self.train_dir, self.meta_filename)
+        print(f'Total classes : {self.nb_classes}')
+        self.train_data_getter, _= create_data_loader(self.train_dir, coco_data, 'file_name', 'category_id', self.transform, self.batch, limit)
+        print(f'Total samples in loader :{len(self.train_data_getter)}')
         self.init_model()
 
     def init_model(self):
@@ -70,10 +72,12 @@ class Herbarium:
         else:
             return None
 
-    def train(self, epochs = 1):
+    def train(self, epochs = 3):
 
+        print("start training")
         # forward pass
         for epoch in range(epochs):
+            print(f'epoch {epoch}')
             progress_loss = 0.0
             
             # model training mode
@@ -92,9 +96,10 @@ class Herbarium:
                 progress_loss += loss.detach().item()
 
             self.model.eval()
+            print(f'value i : {i}')
             print(f'Epoch : {epoch} | Loss : {(progress_loss/i):.4}')
     
-    def step_train(self, epochs=1):
+    def step_train(self, epochs=1, verbose=False):
 
         for i in range(epochs):
             progress_loss = 0.0
@@ -116,7 +121,8 @@ class Herbarium:
                     self.model.eval()
                     self.iter_data = None
                     iterate = False
-            print(f'Epoch : {i+1} | Loss : {(progress_loss/64):.4}')
+            if verbose:
+                print(f'Epoch : {i+1} | Loss : {(progress_loss/64):.4}')
     
     def test(self):
         iterate = True
